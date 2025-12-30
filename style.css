@@ -2,14 +2,113 @@ body {
     min-height: 100vh;
     margin: 0;
     font-family: 'Segoe UI', Arial, sans-serif;
-    background: linear-gradient(135deg, #3a8dde 0%, #005fa3 100%);
+    background: radial-gradient(ellipse at center, #0b0b0b 0%, #000 60%);
+    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
+/* make sure tree scene sits nicely */
+.tree-scene {
+    position: fixed;
+    left: 50%;
+    top: 45%;
+    transform: translate(-50%, -50%);
+    width: 340px;
+    height: 440px;
+    perspective: 900px;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.86;
+    filter: drop-shadow(0 12px 30px rgba(0,0,0,0.6));
+}
+
+.tree {
+    width: 220px;
+    height: 360px;
+    position: relative;
+    transform-style: preserve-3d;
+    transform-origin: center bottom;
+    animation: tree-spin 12s linear infinite;
+}
+
+/* star */
+.tree .star {
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 28px;
+    color: #ffd54f;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    z-index: 5;
+}
+
+/* triangular layers */
+.tree .layer {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 110px solid transparent;
+    border-right: 110px solid transparent;
+    border-bottom: 84px solid #0b6b2b;
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+}
+.tree .l1 { top: 10px; border-bottom-width: 100px; transform: translateX(-50%) translateZ(0px) rotateX(8deg); }
+.tree .l2 { top: 70px; border-bottom-width: 92px; transform: translateX(-50%) translateZ(6px) rotateX(6deg); }
+.tree .l3 { top: 128px; border-bottom-width: 84px; transform: translateX(-50%) translateZ(12px) rotateX(4deg); }
+.tree .l4 { top: 178px; border-bottom-width: 72px; transform: translateX(-50%) translateZ(18px) rotateX(2deg); }
+.tree .l5 { top: 218px; border-bottom-width: 60px; transform: translateX(-50%) translateZ(24px) rotateX(0deg); }
+
+.tree .trunk {
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 52px;
+    height: 60px;
+    background: linear-gradient(180deg,#6b3b10,#3c1f06);
+    border-radius: 6px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    z-index: 4;
+}
+
+/* lights */
+.tree .light {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    left: var(--x, 50%);
+    top: var(--y, 50%);
+    background: var(--c, #ffeb3b);
+    box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+    transform: translate(-50%, -50%);
+    animation: twinkle 1.6s ease-in-out infinite;
+    animation-delay: var(--d, 0s);
+    z-index: 6;
+}
+
+@keyframes twinkle {
+    0%,100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.45; transform: translate(-50%, -50%) scale(0.75); }
+}
+
+@keyframes tree-spin {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(360deg); }
+}
+
+/* prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .tree { animation: none !important; }
+    .tree .light { animation: none !important; }
+}
+
 .container {
-    background: rgba(255,255,255,0.10);
+    background: rgba(150, 105, 68, 0.09);
     border-radius: 24px;
     padding: 48px 32px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.15);
@@ -18,6 +117,8 @@ body {
     align-items: center;
     justify-content: center;
     gap: 24px;
+    position: relative;
+    z-index: 2;
 }
 
 h1 {
@@ -36,6 +137,9 @@ h1 {
 }
 
 .contact-btn {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
     background: #fff;
     color: #005fa3;
     border: none;
@@ -45,10 +149,76 @@ h1 {
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    transition: background 0.2s, color 0.2s;
+    transition: color 0.15s ease, background 0.15s ease, transform 0.12s;
+    will-change: transform;
 }
 
-.contact-btn:hover {
-    background: #005fa3;
+/* gradient overlay for rainbow glow */
+.contact-btn::before {
+    content: "";
+    position: absolute;
+    inset: -30% -30%;
+    background: conic-gradient(from 0deg, #ff0000, #ff7a00, #ffef00, #00ff00, #00bfff, #4b00ff, #ff00ff, #ff0000);
+    background-size: 200% 200%;
+    opacity: 0;
+    filter: blur(8px) saturate(120%);
+    transform: scale(1) rotate(0deg);
+    border-radius: inherit;
+    transition: opacity 0.18s ease;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* show & animate on hover/focus/active */
+.contact-btn:hover,
+.contact-btn:focus,
+.contact-btn:active {
     color: #fff;
+    background: transparent;
+    animation: throb 0.9s ease-in-out infinite;
+}
+
+.contact-btn:hover::before,
+.contact-btn:focus::before,
+.contact-btn:active::before {
+    opacity: 1;
+    animation: rainbow 2s linear infinite;
+}
+
+/* animations */
+@keyframes rainbow {
+    0%   { transform: rotate(0deg) translateX(0%); }
+    50%  { transform: rotate(180deg) translateX(20%); }
+    100% { transform: rotate(360deg) translateX(0%); }
+}
+
+@keyframes throb {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.06); }
+    100% { transform: scale(1); }
+}
+
+/* Accessibility: respect user's reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .contact-btn { animation: none !important; transition: none !important; }
+    .contact-btn::before { animation: none !important; filter: none; opacity: 0.6; }
+}
+
+/* Secondary / ghost style for Test button ✅ */
+.test-btn {
+    background: transparent;
+    color: #fff;
+    border: 2px solid rgba(255,255,255,0.9);
+    border-radius: 24px;
+    padding: 12px 34px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: none;
+    transition: background 0.15s, color 0.15s, transform 0.12s;
+}
+
+.test-btn:hover {
+    background: rgba(255,255,255,0.08);
+    transform: translateY(-2px);
 }
